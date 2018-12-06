@@ -1,0 +1,95 @@
+---
+title: "NeuralNetworks"
+author: "David Nixon"
+date: "December 5, 2018"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(rgl)
+library(plot3D)
+library(plot3Drgl)
+library(plotly)
+```
+
+First we will inspect the given data.
+
+```{r 1.10}
+rawData <- read.csv('irisdata.csv')
+
+summary(rawData)
+```
+
+
+
+
+
+Now we will filter out the Setosa species, because we are only concerned with the second and third iris species, and then plot the remaining samples based on the length and width of their petals.
+```{r 1.11}
+filteredData <- dplyr::filter(rawData, rawData['species'] != 'setosa')
+
+ggplot(filteredData, aes(x=petal_length, y=petal_width, color=species)) + geom_point() + xlab("Petal Length (cm)") + ylab("Petal Width (cm)") + labs(color = "Species")
+```
+
+
+
+
+
+Now we use Logistic(z) = 1 / (1 + exp(−z)) to define a function to output a linear classification with logistic regression. The function has 5 inputs: w1, w2, w3, petalLength, and petalWidth. Where w1,w2,and w3 are weight parameters. An output of 0 means that the iris has been classified as the 2nd species (a versicolor), and an output of 1 means that it has been classified as the 3rd species (a virginica).
+``` {r 1.2}
+
+singleLayerClassifier <- function(w0,w1,w2, petalLength, petalWidth) {
+  
+  #The Linear Function
+  z <- w0 + w1*petalLength + w2*petalWidth
+  
+  rawClassification <- (1/(1+exp(-z)))
+  
+  if (rawClassification >= .5) {
+    classification = 1
+  }
+  if (rawClassification < .5) {
+    classification = 0
+  }
+  
+  return(classification)
+}
+```
+
+
+
+We can use this function to plot a decision boundary. This also helps us estimate the weights we should use as inputs for the Function above.
+``` {r 1.3}
+plotBoundary <- function (w0,w1,w2) {
+  ggplot(filteredData, aes(x=petal_length, y=petal_width, color=species)) + geom_point() + xlab("Petal Length (cm)") + ylab("Petal Width (cm)") + labs(color = "Species") + geom_abline(slope = -w1/w2, intercept = -w0/w2)
+}
+plotBoundary(-4,.5,1)
+```
+
+
+``` {r 1.4}
+#plot 0 or 1 over the input of petal length and petal width from the filteredData
+z <-list()
+for (i in 1:nrow(filteredData)) {
+  z[[i]]<-singleLayerClassifier(-4,.5,1,filteredData[i,3], filteredData[i,4])
+}
+x<-filteredData$petal_length
+y<-filteredData$petal_width
+#z<-singleLayerClassifier(-4,.5,1,x,y)
+
+scatter3D(x, y, as.numeric(z),color=filteredData$species)
+#persp3D(flower)
+#plot_ly(data = filteredData, x = filteredData$sepal_length, y = filteredData$sepal_width, z = filteredData$petal_length,type = "scatter3d", mode = "markers", color=filteredData$species)` 
+```
+
+We can test the classifier on a few of the values given as a sanity check.
+``` {r 1.5}
+
+
+```
+
+
+
+
